@@ -27,8 +27,8 @@ uint8_t rssiCallback() { return 0; }; // Dummy return if no rssi value can be re
 size_t writeCallback(const uint8_t *buf, uint8_t len);
 void ICACHE_RAM_ATTR sosBlink(void *pArg);
 
-const char* ssid = "lallinger";
-const char* password = "Fritz9.3.1990";
+const char* ssid = "<SSID>";
+const char* password = "<password>";
 
 #if defined(ESP8266)
 extern "C" {
