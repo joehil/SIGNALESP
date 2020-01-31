@@ -319,8 +319,18 @@ size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 
 	memccpy()
 
-		return serverClient.write(buf, len);
-	//serverClient.write("test");
+	size_t cb = serverClient.write(buf, len);
+   
+   if (cb != len) {
+#ifdef ESP32
+        esp_task_wdt_reset();
+        yield();
+#elif defined(ESP8266)
+        wdt_reset();
+#endif
+   }
+
+   return cb;
 #endif
 }
 
