@@ -3,7 +3,7 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.1-JH"
+#define PROGVERS               "3.3.2-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
@@ -26,8 +26,10 @@ inline void ethernetEvent();
 uint8_t rssiCallback() { return 0; }; // Dummy return if no rssi value can be retrieved from receiver
 size_t writeCallback(const uint8_t *buf, uint8_t len);
 void ICACHE_RAM_ATTR sosBlink(void *pArg);
+uint32_t net_con_count = 0;
 
-const char* ssid = "<SSID>";
+
+const char* ssid = "<ssid>";
 const char* password = "<password>";
 
 #if defined(ESP8266)
@@ -249,13 +251,21 @@ void loop() {
 	serialEvent();
 	ethernetEvent();
 
+  if (!serverClient) net_con_count++;
+  else net_con_count = 0;
+
+  if (net_con_count > 13333333){  // approx. 3 minutes
+    Serial.println("Net_con_count");
+    net_con_count = 0;
+    ESP.restart();
+  }
+  
 	while (FiFo.count()>0) { //Puffer auslesen und an Dekoder uebergeben
 		aktVal = FiFo.dequeue();
 		state = musterDec.decode(&aktVal);
 		if (state) blinkLED = true; //LED blinken, wenn Meldung dekodiert
 		if (FiFo.count()<120) yield();
 	}
-//  yield();
 }
 
 //============================== Write callback =========================================
@@ -306,6 +316,7 @@ size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 			memmove((void*)buf, buf + copy, len);
 		}
 	}
+//  Serial.println("Called writeCallback");
 	return len;
 #else
 
