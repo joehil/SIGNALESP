@@ -3,13 +3,15 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.2-JH"
+#define PROGVERS               "3.3.3-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
 #define FIFO_LENGTH			   200
 
 #define ETHERNET_PRINT
+#define USE_PING
+#define PING_TIME          40000000  // approximately 15 minutes
 
 // EEProm Addresscommands
 #define EE_MAGIC_OFFSET      0
@@ -28,6 +30,11 @@ size_t writeCallback(const uint8_t *buf, uint8_t len);
 void ICACHE_RAM_ATTR sosBlink(void *pArg);
 uint32_t net_con_count = 0;
 
+#if defined(USE_PING)
+#include <Pinger.h>
+uint32_t ping_count = 0;
+Pinger pinger;
+#endif
 
 const char* ssid = "<ssid>";
 const char* password = "<password>";
@@ -242,6 +249,24 @@ void ICACHE_RAM_ATTR cronjob(void *pArg) {
 	if (cnt++ == 0)  // if cnt is 0 at start or during rollover
 		getUptime();
 
+#if defined(USE_PING)
+ pinger.OnReceive([](const PingerResponse& response)
+  {
+    if (!response.ReceivedResponse)
+    {
+      Serial.println("Request timed out.");
+      ESP.restart();
+    }
+
+    return true;
+  });
+  
+ pinger.OnEnd([](const PingerResponse& response)
+  {
+    return true;
+  });
+#endif
+
 }
 
 
@@ -259,6 +284,14 @@ void loop() {
     net_con_count = 0;
     ESP.restart();
   }
+
+#if defined(USE_PING)
+  ping_count++;
+  if (ping_count > PING_TIME){
+    pinger.Ping(WiFi.gatewayIP(), 1);
+    ping_count = 0;
+  }
+#endif
   
 	while (FiFo.count()>0) { //Puffer auslesen und an Dekoder uebergeben
 		aktVal = FiFo.dequeue();
@@ -412,6 +445,7 @@ int freeRam() {
   return system_get_free_heap_size();
 #endif
 }
+
 
 
 #endif
