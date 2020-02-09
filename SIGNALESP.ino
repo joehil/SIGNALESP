@@ -3,7 +3,7 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.3-JH"
+#define PROGVERS               "3.3.4-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
@@ -431,6 +431,8 @@ void serialEvent()
 				send_cmd();
 				idx = 0; // increments to 1
 				return; //Exit function
+      case '!':
+        ESP.restart();
 			}
 			idx++;
 		}
