@@ -1,4 +1,4 @@
-# SIGNALESP ESP8266 v3.3.1  with cc1101 support 
+# SIGNALESP ESP8266 with cc1101 support 
 
 
 ### Getting started
