@@ -3,7 +3,7 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.4-JH"
+#define PROGVERS               "3.3.5-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
@@ -11,7 +11,7 @@
 
 #define ETHERNET_PRINT
 #define USE_PING
-#define PING_TIME          40000000  // approximately 15 minutes
+#define PING_TIME          40000000  // approximately 9 minutes
 
 // EEProm Addresscommands
 #define EE_MAGIC_OFFSET      0
@@ -69,7 +69,7 @@ SimpleFIFO<int, FIFO_LENGTH> FiFo; //store FIFO_LENGTH # ints
 #include "send.h"
 #include "FastDelegate.h" 
 
-IPAddress staticIP(192,168,0,60);
+IPAddress staticIP(192,168,0,64);
 IPAddress gateway(192,168,0,1);
 IPAddress subnet(255,255,255,0);
 
@@ -134,6 +134,7 @@ void setup() {
 
   WiFi.config(staticIP, gateway, subnet);
 	WiFi.mode(WIFI_STA);
+  WiFi.setAutoReconnect(false);
   WiFi.begin(ssid, password);
 
 	Serial.begin(115200);
@@ -276,10 +277,10 @@ void loop() {
 	serialEvent();
 	ethernetEvent();
 
-  if (!serverClient) net_con_count++;
+  if (!serverClient || !serverClient.connected() || (WiFi.status() != WL_CONNECTED)) net_con_count++;
   else net_con_count = 0;
 
-  if (net_con_count > 13333333){  // approx. 3 minutes
+  if (net_con_count > 3333333){  // approx. 1 minute
     Serial.println("Net_con_count");
     net_con_count = 0;
     ESP.restart();
