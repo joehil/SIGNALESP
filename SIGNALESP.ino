@@ -3,7 +3,7 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.5-JH"
+#define PROGVERS               "3.3.6-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
@@ -69,7 +69,7 @@ SimpleFIFO<int, FIFO_LENGTH> FiFo; //store FIFO_LENGTH # ints
 #include "send.h"
 #include "FastDelegate.h" 
 
-IPAddress staticIP(192,168,0,64);
+IPAddress staticIP(192,168,0,60);
 IPAddress gateway(192,168,0,1);
 IPAddress subnet(255,255,255,0);
 
@@ -134,7 +134,7 @@ void setup() {
 
   WiFi.config(staticIP, gateway, subnet);
 	WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(false);
+  WiFi.setAutoReconnect(true);
   WiFi.begin(ssid, password);
 
 	Serial.begin(115200);
@@ -280,7 +280,7 @@ void loop() {
   if (!serverClient || !serverClient.connected() || (WiFi.status() != WL_CONNECTED)) net_con_count++;
   else net_con_count = 0;
 
-  if (net_con_count > 3333333){  // approx. 1 minute
+  if (net_con_count > 9000000){  // approx. 2 minutes
     Serial.println("Net_con_count");
     net_con_count = 0;
     ESP.restart();
@@ -295,6 +295,7 @@ void loop() {
 #endif
   
 	while (FiFo.count()>0) { //Puffer auslesen und an Dekoder uebergeben
+//    Serial.println("FI1");
 		aktVal = FiFo.dequeue();
 		state = musterDec.decode(&aktVal);
 		if (state) blinkLED = true; //LED blinken, wenn Meldung dekodiert
@@ -314,6 +315,7 @@ uint8_t writeBuffer[writeBufferSize];
 size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 {
 #ifdef _USE_WRITE_BUFFER
+  Serial.println("CW1");
 	if (!serverClient || !serverClient.connected())
 		return 0;
 
@@ -350,7 +352,7 @@ size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 			memmove((void*)buf, buf + copy, len);
 		}
 	}
-//  Serial.println("Called writeCallback");
+  Serial.println("CW2");
 	return len;
 #else
 
@@ -368,10 +370,10 @@ size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
    
    if (cb != len) {
 #ifdef ESP32
-        esp_task_wdt_reset();
-        yield();
+//        esp_task_wdt_reset();
+//        yield();
 #elif defined(ESP8266)
-        wdt_reset();
+//        wdt_reset();
 #endif
    }
 
@@ -382,13 +384,15 @@ size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 
 inline void ethernetEvent()
 {
+//  Serial.println("EE1");
 	//check if there are any new clients
 	if (Server.hasClient()) {
 		if (!serverClient || !serverClient.connected()) {
 			if (serverClient) serverClient.stop();
 			serverClient = Server.available();
 			DBG_PRINTLN("New client: ");
-			DBG_PRINTLN(serverClient.remoteIP());
+      Serial.println("EE2");
+      DBG_PRINTLN(serverClient.remoteIP());
 			return;
 		}
 		//no free/disconnected spot so reject
@@ -417,10 +421,10 @@ void serialEvent()
 			case '\0':
 			case '#':
 #ifdef ESP32
-				esp_task_wdt_reset();
-				yield();
+//				esp_task_wdt_reset();
+//				yield();
 #elif defined(ESP8266)
-				wdt_reset();
+//				wdt_reset();
 #endif
 				commands::HandleShortCommand();  // Short command received and can be processed now
 				idx = 0;
