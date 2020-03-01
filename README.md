@@ -3,6 +3,8 @@
 
 This is a special version of the SIGNALESP software that works for me. Unfortunately I did not get the official version (https://github.com/RFD-FHEM/SIGNALESP) to work. It contains the wifi-manager and I did not find a version of that software that worked. So I decided on building my own version without wifi-manager. This means that you have to fill in the wifi data for your router connection into the source before you compile the code.
 
+The next problem I had was that my WIFI is not the most reliable in the world so my first versions of this software often got hung. The current version does not have these problems any more and works like a charm (for me).
+
 
 ### Getting started
 
