@@ -50,6 +50,8 @@ extern "C" {
 #include "esp_task_wdt.h"
 #endif
 
+void eventWiFi(WiFiEvent_t event);
+
 #include <FS.h>   
 #include <EEPROM.h>
 
@@ -134,7 +136,8 @@ void setup() {
 
   WiFi.config(staticIP, gateway, subnet);
 	WiFi.mode(WIFI_STA);
-  WiFi.setAutoReconnect(true);
+  WiFi.setAutoReconnect(false);
+  WiFi.onEvent(eventWiFi); 
   WiFi.begin(ssid, password);
 
 	Serial.begin(115200);
@@ -453,6 +456,46 @@ int freeRam() {
 #endif
 }
 
+/********************************************************
+/*  Handle WiFi events                                  *
+/********************************************************/
+void eventWiFi(WiFiEvent_t event) {
+     
+  switch(event) {
+    case WIFI_EVENT_STAMODE_CONNECTED:
+      Serial.println("EV1");
+    break;
+    
+    case WIFI_EVENT_STAMODE_DISCONNECTED:
+      Serial.println("EV2");
+      ESP.restart();
+    break;
+    
+     case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
+      Serial.println("EV3");
+    break;
+    
+    case WIFI_EVENT_STAMODE_GOT_IP:
+      Serial.println("EV4");
+    break;
+    
+    case WIFI_EVENT_STAMODE_DHCP_TIMEOUT:
+      Serial.println("EV5");
+    break;
+    
+    case WIFI_EVENT_SOFTAPMODE_STACONNECTED:
+      Serial.println("EV6");
+    break;
+    
+    case WIFI_EVENT_SOFTAPMODE_STADISCONNECTED:
+      Serial.println("EV7");
+    break;
+    
+    case WIFI_EVENT_SOFTAPMODE_PROBEREQRECVED:
+      Serial.println("EV8");
+    break;
+  }
+}
 
 
 #endif
