@@ -14,7 +14,7 @@ You have to find the following lines:
 const char* ssid = "<ssid>"; 
 const char* password = "<password>";
 ```
-Here you have to replace <ssid> with the SSID of your WIFI and <password> with the password of ypur WIFI.
+Here you have to replace ```<ssid>``` with the SSID of your WIFI and ```<password>``` with the password of your WIFI.
 
 And this place in the code:
 
