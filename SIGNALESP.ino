@@ -3,7 +3,7 @@
 #include "compile_config.h"
 
 #define PROGNAME               " SIGNALESP "
-#define PROGVERS               "3.3.6-JH"
+#define PROGVERS               "3.3.7-JH"
 #define VERSION_1              0x33
 #define VERSION_2              0x1d
 #define BAUDRATE               115200
@@ -84,8 +84,8 @@ SignalDetectorClass musterDec;
 volatile bool blinkLED = false;
 String cmdstring = "";
 volatile unsigned long lastTime = micros();
-
-
+int noclient = 0;
+int ev2cnt = 0;
 
 #ifdef ESP32
 esp_timer_create_args_t cronTimer_args;
@@ -119,8 +119,9 @@ void ICACHE_RAM_ATTR sosBlink (void *pArg) {
 }
 
 void setup() {
+  delay(20000);
+	
 	char cfg_ipmode[7] = "dhcp";
-
 
 #ifdef ESP32
 	blinksos_args.callback = sosBlink;
@@ -138,6 +139,7 @@ void setup() {
 	WiFi.mode(WIFI_STA);
   WiFi.setAutoReconnect(false);
   WiFi.onEvent(eventWiFi); 
+  WiFi.hostname("SignalESP");
   WiFi.begin(ssid, password);
 
 	Serial.begin(115200);
@@ -318,9 +320,15 @@ uint8_t writeBuffer[writeBufferSize];
 size_t writeCallback(const uint8_t *buf, uint8_t len = 1)
 {
 #ifdef _USE_WRITE_BUFFER
-  Serial.println("CW1");
-	if (!serverClient || !serverClient.connected())
+//  Serial.println("CW1");
+	if (!serverClient || !serverClient.connected()){
+    noclient++;
+    if (noclient > 1500000) {
+      Serial.println("CW1");
+      ESP.restart();
+    }
 		return 0;
+	}
 
 	size_t result = 0;
 
@@ -468,7 +476,10 @@ void eventWiFi(WiFiEvent_t event) {
     
     case WIFI_EVENT_STAMODE_DISCONNECTED:
       Serial.println("EV2");
-      ESP.restart();
+      WiFi.reconnect();
+      ev2cnt++;
+      if (ev2cnt > 20) 
+         ESP.restart();
     break;
     
      case WIFI_EVENT_STAMODE_AUTHMODE_CHANGE:
